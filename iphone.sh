@@ -15,6 +15,8 @@ if [ "$#" -eq 0 ]; then
 fi
 
 function ffaudio {
+	filename=$(basename "$i")
+	filename="${filename%.*}"
 	$ff -i $i \
 		-cutoff 19000 \
 		-c:v copy \
@@ -22,7 +24,7 @@ function ffaudio {
 		-profile:a aac_he_v2 \
 		-b:a 48k \
 		-ac 2 \
-		$i.m4v
+		"$filename.m4v"
 }
 
 for i in "${movies[@]}"; do
