@@ -5,7 +5,7 @@
 # Author:  Jason A. French
 #
 
-ff=${type -P ffmpeg}
+ff=$(type -P ffmpeg)
 movies=( "$@" )
 
 if [ "$#" -eq 0 ]; then
@@ -15,16 +15,16 @@ if [ "$#" -eq 0 ]; then
 fi
 
 function ffaudio {
-	$ff -i $1 \
+	$ff -i $i \
 		-cutoff 19000 \
 		-c:v copy \
 		-c:a libfdk_aac \
 		-profile:a aac_he_v2 \
 		-b:a 48k \
 		-ac 2 \
-		$1.m4v
+		$i.m4v
 }
 
-for arg; do
+for i in "${movies[@]}"; do
 	ffaudio
 done
