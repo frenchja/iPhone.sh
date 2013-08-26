@@ -8,6 +8,23 @@
 ff=$(type -P ffmpeg)
 movies=( "$@" )
 
+NORMAL=$(tput sgr0)
+GREEN=$(tput setaf 2; tput bold)
+YELLOW=$(tput setaf 3)
+RED=$(tput setaf 1)
+
+function red() {
+    echo -e "$RED$*$NORMAL"
+}
+
+function green() {
+    echo -e "$GREEN$*$NORMAL"
+}
+
+function yellow() {
+    echo -e "$YELLOW$*$NORMAL"
+}
+
 if [ "$#" -eq 0 ]; then
 	echo "This script resamples and remuxes a series of movies for the iPhone 5."
 	echo ""
@@ -16,6 +33,7 @@ fi
 
 function ffaudio {
 	filename=$(basename "$i")
+	# Cut .mkv extension
 	filename="${filename%.*}"
 	$ff -i $i \
 		-cutoff 19000 \
@@ -29,4 +47,5 @@ function ffaudio {
 
 for i in "${movies[@]}"; do
 	ffaudio
+	return 0
 done
