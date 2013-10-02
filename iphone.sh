@@ -4,6 +4,14 @@
 #
 # Author:  Jason A. French
 #
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Library General Public License for more details.
 
 ff=$(type -P ffmpeg)
 movies=( "$@" )
@@ -31,7 +39,15 @@ if [ "$#" -eq 0 ]; then
 	echo "Usage:  iphone.sh movie1.mkv movie2.mkv ..."
 fi
 
-function fixport {
+function checkFFMPEG() {
+	ffmpegOutput=$($ff -encoders | grep libfdk_aac)
+	if [[ $ffmpegOutput != *Fraunhofer FDK AAC (codec aac)* ]]; then
+		red('Exiting!  ffmpeg not compiled with libfdk_aac!')
+		exit 1
+	fi
+}
+
+function fixport() {
 	match='--enable-libfaac'
 	insert='--enable-libfdk_aac'
 	port='/opt/local/var/macports/sources/rsync.macports.org/release/tarballs/ports/multimedia/ffmpeg-devel/Portfile'
