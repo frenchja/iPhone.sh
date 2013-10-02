@@ -31,6 +31,13 @@ if [ "$#" -eq 0 ]; then
 	echo "Usage:  iphone.sh movie1.mkv movie2.mkv ..."
 fi
 
+function fixport {
+	match='--enable-libfaac'
+	insert='--enable-libfdk_aac'
+	port='/opt/local/var/macports/sources/rsync.macports.org/release/tarballs/ports/multimedia/ffmpeg-devel/Portfile'
+	sudo sed -i "s/$match/$match\n$insert/" $port
+}
+
 function ffaudio {
 	filename=$(basename "$i")
 	# Cut .mkv extension
