@@ -21,15 +21,15 @@ GREEN=$(tput setaf 2; tput bold)
 YELLOW=$(tput setaf 3)
 RED=$(tput setaf 1)
 
-function red() {
+red() {
     echo -e "$RED$*$NORMAL"
 }
 
-function green() {
+green() {
     echo -e "$GREEN$*$NORMAL"
 }
 
-function yellow() {
+yellow() {
     echo -e "$YELLOW$*$NORMAL"
 }
 
@@ -39,22 +39,22 @@ if [ "$#" -eq 0 ]; then
 	echo "Usage:  iphone.sh movie1.mkv movie2.mkv ..."
 fi
 
-function checkFFMPEG() {
+checkFFMPEG() {
 	ffmpegOutput=$($ff -encoders | grep libfdk_aac)
-	if [[ $ffmpegOutput != *Fraunhofer FDK AAC (codec aac)* ]]; then
+	if [[ "$ffmpegOutput" != "*Fraunhofer FDK AAC (codec aac)*" ]]; then
 		red('Exiting!  ffmpeg not compiled with libfdk_aac!')
 		exit 1
 	fi
 }
 
-function fixport() {
+fixport() {
 	match='--enable-libfaac'
 	insert='--enable-libfdk_aac'
 	port='/opt/local/var/macports/sources/rsync.macports.org/release/tarballs/ports/multimedia/ffmpeg-devel/Portfile'
 	sudo sed -i "s/$match/$match\n$insert/" $port
 }
 
-function ffaudio {
+ffaudio {
 	filename=$(basename "$i")
 	# Cut .mkv extension
 	filename="${filename%.*}"
