@@ -12,9 +12,10 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Library General Public License for more details.
+#
+# TODO 1) Add getopt() support.
 
 ff=$(type -P ffmpeg)
-movies=( "$@" )
 
 NORMAL=$(tput sgr0)
 GREEN=$(tput setaf 2; tput bold)
@@ -22,15 +23,15 @@ YELLOW=$(tput setaf 3)
 RED=$(tput setaf 1)
 
 red() {
-    echo -e "$RED$*$NORMAL"
+    echo -e "$RED${*}$NORMAL"
 }
 
 green() {
-    echo -e "$GREEN$*$NORMAL"
+    echo -e "$GREEN${*}$NORMAL"
 }
 
 yellow() {
-    echo -e "$YELLOW$*$NORMAL"
+    echo -e "$YELLOW${*}$NORMAL"
 }
 
 if [ "$#" -eq 0 ]; then
@@ -41,20 +42,18 @@ fi
 
 checkFFMPEG() {
 	ffmpegOutput=$($ff -encoders | grep libfdk_aac)
-	if [[ "$ffmpegOutput" != "*Fraunhofer FDK AAC (codec aac)*" ]]; then
-		red('Exiting!  ffmpeg not compiled with libfdk_aac!')
+	if [[ "$ffmpegOutput" != *"Fraunhofer FDK AAC (codec aac)"* ]]; then
+		red "Exiting!  ffmpeg not compiled with libfdk_aac!"
 		exit 1
 	fi
 }
-
 fixport() {
 	match='--enable-libfaac'
-	insert='--enable-libfdk_aac'
+	insert='--enable-libfaac --enable-libfdk_aac'
 	port='/opt/local/var/macports/sources/rsync.macports.org/release/tarballs/ports/multimedia/ffmpeg-devel/Portfile'
-	sudo sed -i "s/$match/$match\n$insert/" $port
+	sudo sed -i "s/$match/$insert/" $port
 }
-
-ffaudio {
+ffaudio() {
 	filename=$(basename "$i")
 	# Cut .mkv extension
 	filename="${filename%.*}"
@@ -68,7 +67,14 @@ ffaudio {
 		"$filename.m4v"
 }
 
-for i in "${movies[@]}"; do
-	ffaudio
-	return 0
-done
+if [ "$@" == *"--install-ffmpeg"* ]; then
+	echo "Installing ffmpeg with libfdk_aac"
+	fixport
+else
+	movies=( "$@" )
+	checkFFMPEG
+	for i in "${movies[@]}"; do
+		ffaudio
+	done
+fi
+
