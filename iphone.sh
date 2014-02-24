@@ -16,24 +16,21 @@
 # TODO 1) Add getopt() support.
 
 ff=$(type -P ffmpeg)
-
+probe=$(type -P ffprobe)
 NORMAL=$(tput sgr0)
 GREEN=$(tput setaf 2; tput bold)
 YELLOW=$(tput setaf 3)
 RED=$(tput setaf 1)
-
 red() {
     echo -e "$RED${*}$NORMAL"
 }
-
 green() {
     echo -e "$GREEN${*}$NORMAL"
 }
-
 yellow() {
     echo -e "$YELLOW${*}$NORMAL"
 }
-
+# Echo usage
 if [ "$#" -eq 0 ]; then
 	echo "This script resamples and remuxes a series of movies for the iPhone 5."
 	echo ""
@@ -41,6 +38,7 @@ if [ "$#" -eq 0 ]; then
 fi
 
 checkFFMPEG() {
+	# Check for libfdk-aac
 	ffmpegOutput=$($ff -encoders | grep libfdk_aac)
 	if [[ "$ffmpegOutput" != *"Fraunhofer FDK AAC (codec aac)"* ]]; then
 		red "Exiting!  ffmpeg not compiled with libfdk_aac!"
@@ -48,12 +46,17 @@ checkFFMPEG() {
 	fi
 }
 fixport() {
-	match='--enable-libfaac'
-	insert='--enable-libfaac --enable-libfdk_aac'
-	port='/opt/local/var/macports/sources/rsync.macports.org/release/tarballs/ports/multimedia/ffmpeg-devel/Portfile'
-	sudo sed -i "s/$match/$insert/" $port
+	if [[ type port >/dev/null 2>&1 ]]; then
+		match='--enable-libfaac'
+		insert='--enable-libfaac --enable-libfdk_aac'
+		port='/opt/local/var/macports/sources/rsync.macports.org/release/tarballs/ports/multimedia/ffmpeg-devel/Portfile'
+		sudo sed -i "s/$match/$insert/" $port
+	else
+		red "Macports not found.  Please install ffmpeg with libfdk-aac manually."
+		exit 1
+	fi
 }
-ffaudio() {
+iphone() {
 	filename=$(basename "$i")
 	# Cut .mkv extension
 	filename="${filename%.*}"
@@ -66,6 +69,24 @@ ffaudio() {
 		-ac 2 \
 		"$filename.m4v"
 }
+ps3() {
+	# PS3 muxer
+	filename=$(basename "$i")
+	# Cut .mkv extension
+	filename="${filename%.*}"
+	if ffprobe -of flat ${i} 2>&1 | grep 'Audio: aac'; then
+		AUDIO="-c:a copy \\"
+		green "Copying aac audio codec."
+	else
+		AUDIO="-c:a libfdk_aac -vbr 3 -ac 2 \\"
+		yellow "Transcoding audio to aac."
+	fi
+	$ff -i $i \
+		-cutoff 19000 \
+		-c:v copy \
+		${AUDIO}
+		"$filename.mp4"
+}
 
 if [ "$@" == *"--install-ffmpeg"* ]; then
 	echo "Installing ffmpeg with libfdk_aac"
@@ -74,7 +95,6 @@ else
 	movies=( "$@" )
 	checkFFMPEG
 	for i in "${movies[@]}"; do
-		ffaudio
+		iphone
 	done
 fi
-
